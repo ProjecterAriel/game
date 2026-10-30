@@ -2,7 +2,7 @@ import React from 'react';
 import { SafeAreaView, StyleSheet, Platform, StatusBar } from 'react-native';
 import { WebView } from 'react-native-webview';
 
-const API = process.env.EXPO_PUBLIC_API_URL || 'https://flight-simulator-pin.onrender.com';
+const API = 'https://flight-simulator-pin.onrender.com';
 
 export default function App() {
   return (
