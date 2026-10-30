@@ -6,7 +6,7 @@
     "orientation": "default",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
-    "android": {"package":"com.projecterariel.aeroworld","versionCode":1},
+    "android": {"package":"com.projecterariel.aeroworld","versionCode":1,"permissions":["RECORD_AUDIO","INTERNET"]},
     "plugins": ["expo-status-bar"],
     "extra": {"apiUrl":"https://YOUR-RENDER-SERVICE.onrender.com"},
     "ios": {"supportsTablet":true}
