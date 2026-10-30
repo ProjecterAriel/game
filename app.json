@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "AeroWorld",
+    "slug": "aeroworld",
+    "version": "0.1.0",
+    "orientation": "default",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "android": {"package":"com.projecterariel.aeroworld","versionCode":1},
+    "plugins": ["expo-status-bar"],
+    "extra": {"apiUrl":"https://YOUR-RENDER-SERVICE.onrender.com"},
+    "ios": {"supportsTablet":true}
+  }
+}
