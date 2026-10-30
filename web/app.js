@@ -19,14 +19,14 @@ let hangarRenderer=null,hangarScene=null,hangarCamera=null,hangarFrame=null,hang
 function loadHangar(){
  const host=$('hangarViewer'),item=fleet.find(x=>x.id===selectedAircraft);if(hangarFrame)cancelAnimationFrame(hangarFrame);
  host.innerHTML='';hangarScene=new THREE.Scene();hangarScene.background=new THREE.Color(0x0b1b2b);hangarScene.fog=new THREE.Fog(0x0b1b2b,18,55);
- hangarCamera=new THREE.PerspectiveCamera(42,host.clientWidth/Math.max(1,host.clientHeight),.1,100);hangarCamera.position.set(8,5,11);
+ hangarCamera=new THREE.PerspectiveCamera(42,host.clientWidth/Math.max(1,host.clientHeight),.1,100);hangarCamera.position.set(75,48,75);
  hangarRenderer=new THREE.WebGLRenderer({antialias:true});hangarRenderer.setPixelRatio(Math.min(devicePixelRatio,2));hangarRenderer.setSize(host.clientWidth,host.clientHeight);hangarRenderer.outputColorSpace=THREE.SRGBColorSpace;host.appendChild(hangarRenderer.domElement);
  hangarScene.add(new THREE.HemisphereLight(0xa9d8ff,0x253142,2));const keyLight=new THREE.DirectionalLight(0xffffff,3);keyLight.position.set(5,10,7);hangarScene.add(keyLight);
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(60,60),new THREE.MeshStandardMaterial({color:0x172b3d,roughness:.8}));floor.rotation.x=-Math.PI/2;floor.position.y=-.6;hangarScene.add(floor);
  const grid=new THREE.GridHelper(45,45,0x3b6885,0x203b50);grid.position.y=-.58;hangarScene.add(grid);
  const back=new THREE.Mesh(new THREE.BoxGeometry(32,12,.5),new THREE.MeshStandardMaterial({color:0x1b3448,roughness:.9}));back.position.set(0,5,-13);hangarScene.add(back);
  for(let i=-1;i<=1;i++){const lamp=new THREE.PointLight(0x8bcfff,18,16);lamp.position.set(i*8,8,-3);hangarScene.add(lamp)}
- const loader=new GLTFLoader();if(item.url.includes('.glb'))loader.load(item.url,g=>{hangarAircraft=g.scene;hangarAircraft.scale.setScalar(2.1);hangarAircraft.rotation.y=Math.PI/2;hangarAircraft.position.y=.15;hangarScene.add(hangarAircraft)},undefined,()=>showAircraftFallback());
+ const loader=new GLTFLoader();if(item.url.includes('.glb'))loader.load('https://cdn.3dassets.dev/assets/26093/v1/model.glb',g=>{g.scene.scale.setScalar(1);hangarScene.add(g.scene)},undefined,()=>{});if(item.url.includes('.glb'))loader.load(item.url,g=>{hangarAircraft=g.scene;hangarAircraft.scale.setScalar(.85);hangarAircraft.rotation.y=Math.PI/2;hangarAircraft.position.y=.15;hangarScene.add(hangarAircraft)},undefined,()=>showAircraftFallback());
  else showAircraftFallback();
  function showAircraftFallback(){const body=new THREE.Mesh(new THREE.CylinderGeometry(.45,.55,6,20),new THREE.MeshStandardMaterial({color:item.id==='s7'?0x39b84b:0x9ca8b8,metalness:.55,roughness:.35}));body.rotation.z=Math.PI/2;hangarScene.add(body);const wing=new THREE.Mesh(new THREE.BoxGeometry(1.1,.12,13),new THREE.MeshStandardMaterial({color:0xc8d4df,metalness:.4}));wing.position.y=-.15;hangarScene.add(wing);const tail=wing.clone();tail.scale.set(.65,1,.3);tail.position.set(-2.6,.3,0);hangarScene.add(tail)}
  const render=()=>{hangarFrame=requestAnimationFrame(render);if(hangarAircraft)hangarAircraft.rotation.y+=.0008;hangarRenderer.render(hangarScene,hangarCamera)};render();
