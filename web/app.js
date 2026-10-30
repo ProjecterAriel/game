@@ -58,7 +58,7 @@ function addWeatherCard(d){
 }
 async function askAI(image=false){
  let text=$('aiInput').value.trim();if(!text)return;addBubble(text,true);$('aiInput').value='';
- const weatherMatch=text.match(/(?:погода|weather)\\s+(?:в|для|in|for)\\s+(.+)/i);
+ const weatherMatch=text.match(/(?:погода|weather)\s+(?:в|для|in|for)\s+(.+)/i);
  if(!image&&weatherMatch){const place=weatherMatch[1].replace(/[?!.]+$/,'').trim();const wait=addBubble('Получаю погоду и прогноз для '+place+'…');try{const d=await api('/api/weather/forecast?q='+encodeURIComponent(place));wait.remove();addWeatherCard(d)}catch(e){wait.textContent='Не удалось получить погоду: '+e.message}return}
  addBubble('AeroWorld AI думает…');let last=$('chat').lastChild;
  try{let d=await api('/api/ai/chat',{method:'POST',body:JSON.stringify({text,image})});last.textContent=d.answer;if(d.image){let im=document.createElement('img');im.src=d.image;im.style.maxWidth='100%';im.style.borderRadius='12px';last.append(im)}}catch(e){last.textContent='Ошибка: '+e.message}
