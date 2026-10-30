@@ -149,6 +149,47 @@ async def update_position(data: PositionData, user=Depends(current_user)):
     await db.positions.update_one({"user_id": user["_id"]}, {"$set": position}, upsert=True)
     return {"ok": True, "updated_at": now.isoformat()}
 
+
+@app.get("/api/weather/forecast")
+async def weather_forecast(q: str, user=Depends(current_user)):
+    key = os.getenv("OPENWEATHER_API_KEY")
+    if not key:
+        raise HTTPException(503, "OPENWEATHER_API_KEY is not configured")
+    async with httpx.AsyncClient(timeout=25) as http:
+        geo = await http.get("https://api.openweathermap.org/geo/1.0/direct", params={"q": q, "limit": 1, "appid": key})
+        if geo.status_code != 200 or not geo.json():
+            raise HTTPException(404, "Location not found")
+        place = geo.json()[0]
+        lat, lon = place["lat"], place["lon"]
+        current_response, forecast_response = await __import__("asyncio").gather(
+            http.get("https://api.openweathermap.org/data/2.5/weather", params={"lat": lat, "lon": lon, "appid": key, "units": "metric"}),
+            http.get("https://api.openweathermap.org/data/2.5/forecast", params={"lat": lat, "lon": lon, "appid": key, "units": "metric"})
+        )
+    if current_response.status_code != 200 or forecast_response.status_code != 200:
+        raise HTTPException(502, "OpenWeather forecast request failed")
+    current = current_response.json()
+    forecast = forecast_response.json()
+    offset = current.get("timezone", 0)
+    days = {}
+    for item in forecast.get("list", []):
+        local_day = datetime.fromtimestamp(item["dt"] + offset, timezone.utc).strftime("%Y-%m-%d")
+        bucket = days.setdefault(local_day, {"date": local_day, "temps": [], "descriptions": [], "clouds": [], "pop": []})
+        bucket["temps"].append(item["main"]["temp"])
+        bucket["descriptions"].append(item["weather"][0]["description"])
+        bucket["clouds"].append(item.get("clouds", {}).get("all", 0))
+        bucket["pop"].append(item.get("pop", 0))
+    daily = [{"date": d["date"], "min": round(min(d["temps"])), "max": round(max(d["temps"])),
+              "description": max(set(d["descriptions"]), key=d["descriptions"].count),
+              "clouds": round(sum(d["clouds"])/len(d["clouds"])),
+              "precipitation_probability": round(max(d["pop"])*100)} for d in list(days.values())[:5]]
+    return {"place": place.get("name"), "country": place.get("country"), "lat": lat, "lon": lon,
+            "timezone": offset, "local_time": current["dt"] + offset,
+            "sunrise": current["sys"]["sunrise"] + offset, "sunset": current["sys"]["sunset"] + offset,
+            "temperature": round(current["main"]["temp"]), "feels_like": round(current["main"]["feels_like"]),
+            "description": current["weather"][0]["description"], "icon": current["weather"][0]["icon"],
+            "clouds": current.get("clouds", {}).get("all", 0), "humidity": current["main"]["humidity"],
+            "wind": current.get("wind", {}).get("speed", 0), "daily": daily}
+
 @app.get("/api/online")
 async def get_online(user=Depends(current_user)):
     cutoff = datetime.now(timezone.utc) - timedelta(seconds=45)
