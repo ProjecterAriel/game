@@ -4,7 +4,7 @@ from typing import Optional
 import jwt
 import httpx
 from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect, Header
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr, Field
 from pymongo import AsyncMongoClient
@@ -236,6 +236,26 @@ async def online_ws(ws: WebSocket, token: str):
         if 'uid' in locals():
             sockets.pop(uid, None)
             await db.positions.delete_one({"user_id": uid})
+
+
+@app.get("/api/config")
+async def public_config():
+    return {"cesiumIonToken": os.getenv("CESIUM_ION_TOKEN", "")}
+
+@app.get("/api/weather/tiles/{layer}/{z}/{x}/{y}.png")
+async def weather_tile(layer: str, z: int, x: int, y: int):
+    allowed = {"temp_new", "precipitation_new", "wind_new", "pressure_new", "clouds_new"}
+    key = os.getenv("OPENWEATHER_API_KEY")
+    if layer not in allowed:
+        raise HTTPException(404, "Unknown weather layer")
+    if not key:
+        raise HTTPException(503, "OPENWEATHER_API_KEY is not configured")
+    url = f"https://tile.openweathermap.org/map/{layer}/{z}/{x}/{y}.png?appid={key}"
+    async with httpx.AsyncClient(timeout=20) as http:
+        upstream = await http.get(url)
+    if upstream.status_code != 200:
+        raise HTTPException(502, "OpenWeather tile request failed")
+    return Response(upstream.content, media_type="image/png", headers={"Cache-Control":"public, max-age=300"})
 
 @app.get("/", response_class=HTMLResponse)
 async def home():
