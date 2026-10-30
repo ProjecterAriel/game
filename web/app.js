@@ -18,6 +18,7 @@ async function selectAircraft(id){selectedAircraft=id;renderFleet();$('sideAircr
 let hangarRenderer=null,hangarScene=null,hangarCamera=null,hangarFrame=null,hangarAircraft=null;
 function loadHangar(){
  const host=$('hangarViewer'),item=fleet.find(x=>x.id===selectedAircraft);if(hangarFrame)cancelAnimationFrame(hangarFrame);
+ if(item.id==='s7'||item.id==='darkstar'){const uid=item.id==='s7'?'3ddd1bb9dd5e4d1eb7c6e082e5e75178':'3578c297f98e403aa4c079e0c884953b';host.innerHTML='<iframe title="'+item.name+' 3D model" width="100%" height="100%" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen src="https://sketchfab.com/models/'+uid+'/embed?ui_theme=dark"></iframe>';return;}
  host.innerHTML='';hangarScene=new THREE.Scene();hangarScene.background=new THREE.Color(0x0b1b2b);hangarScene.fog=new THREE.Fog(0x0b1b2b,18,55);
  hangarCamera=new THREE.PerspectiveCamera(42,host.clientWidth/Math.max(1,host.clientHeight),.1,100);hangarCamera.position.set(75,48,75);
  hangarRenderer=new THREE.WebGLRenderer({antialias:true});hangarRenderer.setPixelRatio(Math.min(devicePixelRatio,2));hangarRenderer.setSize(host.clientWidth,host.clientHeight);hangarRenderer.outputColorSpace=THREE.SRGBColorSpace;host.appendChild(hangarRenderer.domElement);
