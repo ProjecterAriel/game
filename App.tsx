@@ -1,8 +1,7 @@
 import React from 'react';
 import { SafeAreaView, StyleSheet, Platform, StatusBar } from 'react-native';
 import { WebView } from 'react-native-webview';
-import Constants from 'expo-constants';
-const API = process.env.EXPO_PUBLIC_API_URL || Constants.expoConfig?.extra?.apiUrl || 'https://YOUR-RENDER-SERVICE.onrender.com';
+const API = process.env.EXPO_PUBLIC_API_URL || 'https://YOUR-RENDER-SERVICE.onrender.com';
 export default function App() {
   return <SafeAreaView style={styles.root}>
     <StatusBar barStyle="light-content" backgroundColor="#07111e" />
