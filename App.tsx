@@ -7,9 +7,8 @@ export default function App() {
     <StatusBar barStyle="light-content" backgroundColor="#07111e" />
     <WebView source={{ uri: API + '/preview' }} originWhitelist={['*']}
       javaScriptEnabled domStorageEnabled allowsInlineMediaPlayback mediaPlaybackRequiresUserAction={false}
-      mediaCapturePermissionGrantType="grantIfSameHostElsePrompt"
       allowsFullscreenVideo geolocationEnabled setSupportMultipleWindows={false}
-      onPermissionRequest={event => event.grant(event.resources)} />
+      />
   </SafeAreaView>;
 }
 const styles=StyleSheet.create({root:{flex:1,backgroundColor:'#07111e',paddingTop:Platform.OS==='android'?StatusBar.currentHeight:0}});
