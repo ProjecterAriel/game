@@ -14,7 +14,6 @@
     "ios": {
       "supportsTablet": true
     },
-    "plugins": ["expo-status-bar"],
     "extra": {
       "apiUrl": "https://flight-simulator-pin.onrender.com"
     }
