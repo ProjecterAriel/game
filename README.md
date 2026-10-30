@@ -48,9 +48,9 @@ Open `/preview`. Configure MongoDB and API keys before registering.
 ## Model credits
 - Aircraft GLBs: [amvlab/aircraft-models](https://github.com/amvlab/aircraft-models), CC BY 4.0. The A320/A350/A380/B737/B787 logo-free GLBs are loaded from its public `models/` directory.
 - Hangar / airport scene: [Airport Terminal and Ground Operations starter GLB](https://cdn.3dassets.dev/assets/26093/v1/model.glb), CC0 1.0; pack details: [3DAssets pack](https://3dassets.dev/packs/airport-terminal-and-ground-operations).
-- S7 A320 community model: [Sketchfab listing](https://sketchfab.com/3d-models/airbus-a320-s7-airlines-3ddd1bb9dd5e4d1eb7c6e082e5e75178), CC BY; confirm download availability and attribute creator.
-- Darkstar: select a model with a compatible license from [Sketchfab search](https://sketchfab.com/search?q=darkstar&type=models); no direct downloadable GLB has been pinned yet.
-- The hangar loads the CC0 airport/ground-operations GLB scene with the selected aircraft overlaid in Three.js.
+- S7 A320: [Sketchfab model](https://sketchfab.com/3d-models/airbus-a320-s7-airlines-3ddd1bb9dd5e4d1eb7c6e082e5e75178), CC BY; embedded as an interactive viewer and attribution is required.
+- Darkstar: [SR-72 Darkstar by Cem Gürbüz](https://sketchfab.com/3d-models/lockheed-martin-sr72-darkstar-topgun-maverick-3578c297f98e403aa4c079e0c884953b), CC BY; embedded as an interactive viewer and attribution is required.
+- The hangar loads the CC0 airport/ground-operations GLB scene with the A320-family models overlaid in Three.js; S7 and Darkstar use their Sketchfab interactive embeds. Their downloadable GLB files still need to be added locally before those two aircraft can be used as in-flight Cesium models.
 
 ## Current prototype scope
 Authentication, settings persistence, AI text/image proxy, globe/map selection, weather tile proxy, online position records and WebSocket audio broadcast are scaffolded. This is an initial functional foundation, not a finished flight simulator: detailed flight physics, synchronized 3D multiplayer aircraft, route navigation, weather forecast cards, robust voice-room membership, and native microphone permission handling still require implementation and device testing.
