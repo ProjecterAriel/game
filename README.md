@@ -23,9 +23,9 @@ npm install
 npx eas-cli login
 npx eas-cli build:configure
 ```
-Set `EXPO_PUBLIC_API_URL` to the deployed Render URL in EAS environment variables, then:
+Set `EXPO_PUBLIC_API_URL` in the EAS preview environment (replace the URL with your actual Render service URL), then:
 ```bash
-npx eas-cli build --platform android --profile preview
+npx eas-cli env:create --environment preview --name EXPO_PUBLIC_API_URL --value https://YOUR-RENDER-SERVICE.onrender.com --visibility plaintext\nnpx eas-cli build --platform android --profile preview
 ```
 
 ## Windows
