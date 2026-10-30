@@ -1,0 +1,9 @@
+{
+  "name": "aeroworld-windows",
+  "version": "0.1.0",
+  "description": "AeroWorld Windows desktop client",
+  "main": "main.cjs",
+  "scripts": {"start":"electron .","dist":"electron-builder --win nsis"},
+  "devDependencies": {"electron":"^34.0.0","electron-builder":"^25.1.8"},
+  "build": {"appId":"com.projecterariel.aeroworld","productName":"AeroWorld","win":{"target":["nsis","portable"]},"nsis":{"oneClick":false,"allowToChangeInstallationDirectory":true}}
+}
