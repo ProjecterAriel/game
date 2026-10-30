@@ -6,9 +6,17 @@
     "orientation": "default",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
-    "android": {"package":"com.projecterariel.aeroworld","versionCode":1,"permissions":["RECORD_AUDIO","INTERNET"]},
+    "android": {
+      "package": "com.projecterariel.aeroworld",
+      "versionCode": 1,
+      "permissions": ["INTERNET", "RECORD_AUDIO"]
+    },
+    "ios": {
+      "supportsTablet": true
+    },
     "plugins": ["expo-status-bar"],
-    "extra": {"apiUrl":"https://YOUR-RENDER-SERVICE.onrender.com"},
-    "ios": {"supportsTablet":true}
+    "extra": {
+      "apiUrl": "https://flight-simulator-pin.onrender.com"
+    }
   }
 }
