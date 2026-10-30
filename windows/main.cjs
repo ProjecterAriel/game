@@ -1,3 +1,4 @@
+// AeroWorld Windows desktop entry point
 const { app, BrowserWindow, shell } = require('electron');
 const path = require('node:path');
 const GAME_URL = process.env.AEROWORLD_URL || 'https://YOUR-RENDER-SERVICE.onrender.com/preview';
