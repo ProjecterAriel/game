@@ -28,17 +28,30 @@ function loadHangar(){
  const grid=new THREE.GridHelper(80,80,0x3b6885,0x203b50);grid.position.y=-.78;hangarScene.add(grid);
  const back=new THREE.Mesh(new THREE.BoxGeometry(52,18,.5),new THREE.MeshStandardMaterial({color:0x1b3448,roughness:.9}));back.position.set(0,8,-28);hangarScene.add(back);
  const loading=document.createElement('div');loading.textContent='Загрузка '+item.name+'…';Object.assign(loading.style,{position:'absolute',inset:'0',display:'grid',placeItems:'center',color:'#d8efff',font:'600 14px sans-serif',background:'#07152255',pointerEvents:'none'});host.appendChild(loading);
+ let hangarTarget=new THREE.Vector3(0,0,0),hangarFitRadius=10;
+ const fitHangarCamera=()=>{
+   if(!hangarCamera||!hangarRenderer)return;
+   const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight),aspect=w/h;
+   hangarCamera.aspect=aspect;
+   const halfV=THREE.MathUtils.degToRad(hangarCamera.fov/2),halfH=Math.atan(Math.tan(halfV)*aspect);
+   const limitingHalf=Math.max(.08,Math.min(halfV,halfH));
+   const distance=Math.max(8,hangarFitRadius/Math.sin(limitingHalf)*1.45);
+   hangarCamera.near=Math.max(.01,distance/2000);hangarCamera.far=Math.max(1000,distance*30);
+   hangarCamera.position.set(hangarTarget.x+distance*.8,hangarTarget.y+distance*.35,hangarTarget.z+distance);
+   hangarCamera.lookAt(hangarTarget);hangarCamera.updateProjectionMatrix();hangarRenderer.setSize(w,h);
+ };
  const frameModel=(root)=>{
    const box=new THREE.Box3().setFromObject(root);if(box.isEmpty())throw new Error('GLB model has no visible geometry');
    const center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3());const maxDim=Math.max(size.x,size.y,size.z);
    if(!Number.isFinite(maxDim)||maxDim<.0001)throw new Error('Invalid GLB dimensions');
-   root.position.sub(center);root.scale.multiplyScalar(18/maxDim);root.rotation.y=Math.PI/2;
-   const fitted=new THREE.Box3().setFromObject(root),fittedCenter=fitted.getCenter(new THREE.Vector3());root.position.y-=fittedCenter.y-.1;
-   hangarScene.add(root);hangarAircraft=root;
-   const finalBox=new THREE.Box3().setFromObject(root),sphere=finalBox.getBoundingSphere(new THREE.Sphere());const radius=Math.max(sphere.radius,2);
-   const distance=(radius/Math.sin(THREE.MathUtils.degToRad(hangarCamera.fov/2)))*1.45;
-   hangarCamera.near=Math.max(.05,distance/1000);hangarCamera.far=Math.max(500,distance*20);hangarCamera.position.set(distance*.95,distance*.42,distance*1.05);hangarCamera.lookAt(sphere.center);hangarCamera.updateProjectionMatrix();
-   loading.remove();
+   const pivot=new THREE.Group();pivot.add(root);root.position.sub(center);root.scale.multiplyScalar(16/maxDim);root.rotation.y=Math.PI/2;
+   hangarScene.add(pivot);hangarAircraft=pivot;
+   const finalBox=new THREE.Box3().setFromObject(pivot);if(finalBox.isEmpty())throw new Error('GLB became empty after centering');
+   const finalCenter=finalBox.getCenter(new THREE.Vector3());pivot.position.sub(finalCenter);
+   const centeredBox=new THREE.Box3().setFromObject(pivot),finalSize=centeredBox.getSize(new THREE.Vector3());
+   hangarTarget.set(0,Math.max(.2,finalSize.y*.12),0);
+   hangarFitRadius=Math.max(2,centeredBox.getBoundingSphere(new THREE.Sphere()).radius);
+   fitHangarCamera();loading.remove();
  };
  const showAircraftFallback=(error)=>{
    console.error('Aircraft GLB load failed:',item.url,error);loading.textContent='Не удалось загрузить GLB · показана резервная модель';
@@ -49,7 +62,7 @@ function loadHangar(){
  };
  const loader=new GLTFLoader();loader.load(item.url,g=>{try{frameModel(g.scene)}catch(e){showAircraftFallback(e)}},progress=>{if(progress.total)loading.textContent='Загрузка '+item.name+' · '+Math.round(progress.loaded/progress.total*100)+'%'},showAircraftFallback);
  const render=()=>{if(!hangarRenderer||!hangarScene||!hangarCamera)return;hangarFrame=requestAnimationFrame(render);if(hangarAircraft)hangarAircraft.rotation.y+=.00055;hangarRenderer.render(hangarScene,hangarCamera)};render();
- hangarResizeObserver=new ResizeObserver(()=>{if(!host.clientWidth||!host.clientHeight)return;hangarCamera.aspect=host.clientWidth/host.clientHeight;hangarCamera.updateProjectionMatrix();hangarRenderer.setSize(host.clientWidth,host.clientHeight)});hangarResizeObserver.observe(host);
+ hangarResizeObserver=new ResizeObserver(()=>{if(!host.clientWidth||!host.clientHeight)return;fitHangarCamera()});hangarResizeObserver.observe(host);window.addEventListener('resize',fitHangarCamera);
 }
 function initMap(id,allowPick){if(!window.Cesium||$(id).dataset.ready)return;$(id).dataset.ready='1';const key=window.CESIUM_ION_TOKEN||'';if(key)Cesium.Ion.defaultAccessToken=key;let v=new Cesium.Viewer(id,{baseLayer:key?undefined:false,terrain:key?Cesium.Terrain.fromWorldTerrain():new Cesium.EllipsoidTerrainProvider(),animation:false,timeline:false,baseLayerPicker:true,geocoder:true,homeButton:true,sceneModePicker:true,navigationHelpButton:false,fullscreenButton:false,infoBox:false,selectionIndicator:false});if(!key)v.imageryLayers.addImageryProvider(new Cesium.OpenStreetMapImageryProvider({url:'https://tile.openstreetmap.org/'}));if(id!=='flightViewer')v.camera.flyTo({destination:Cesium.Cartesian3.fromDegrees(34.8,31.8,1800000)});if(id==='earthMap')earthViewer=v;else if(id==='onlineMap')onlineViewer=v;else flightViewerObj=v;if(allowPick){v.screenSpaceEventHandler.setInputAction(click=>{if(!pickMode)return;const c=v.camera.pickEllipsoid(click.position,v.scene.globe.ellipsoid);if(!c)return;const p=Cesium.Cartographic.fromCartesian(c);const val={lat:Cesium.Math.toDegrees(p.latitude),lon:Cesium.Math.toDegrees(p.longitude)};if(pickMode==='departure'){departure=val;$('departure').value=val.lat.toFixed(4)+','+val.lon.toFixed(4)}else{arrival=val;$('arrival').value=val.lat.toFixed(4)+','+val.lon.toFixed(4)}pickMode=null;updateStart() },Cesium.ScreenSpaceEventType.LEFT_CLICK)}}
 let pickMode=null,weatherLayer=null;$('pickDeparture').onclick=()=>{pickMode='departure';$('flightHint').textContent='Нажмите на глобус, чтобы выбрать вылет.'};$('pickArrival').onclick=()=>{pickMode='arrival';$('flightHint').textContent='Нажмите на глобус, чтобы выбрать прилёт.'};
