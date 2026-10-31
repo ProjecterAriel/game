@@ -42,7 +42,7 @@ function loadHangar(){
  const fitCamera=()=>{
    const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight),aspect=w/h;hangarCamera.aspect=aspect;
    const vFov=THREE.MathUtils.degToRad(hangarCamera.fov),hFov=2*Math.atan(Math.tan(vFov/2)*aspect),limiting=Math.max(.1,Math.min(vFov/2,hFov/2));
-   const distance=Math.max(30,fitRadius/Math.sin(limiting)*1.25);
+   const distance=Math.max(45,fitRadius/Math.sin(limiting)*2.0);
    hangarCamera.near=.05;hangarCamera.far=Math.max(10000,distance*20);
    hangarCamera.position.set(fitTarget.x+distance*.72,fitTarget.y+distance*.42,fitTarget.z+distance);
    hangarCamera.lookAt(fitTarget);hangarCamera.updateProjectionMatrix();hangarRenderer.setSize(w,h);
@@ -53,16 +53,20 @@ function loadHangar(){
    if(!meshCount)throw new Error('GLB загружен, но в нём нет Mesh-геометрии');
    const rawBox=new THREE.Box3().setFromObject(root);if(rawBox.isEmpty())throw new Error('Не удалось определить габариты GLB');
    const rawSize=rawBox.getSize(new THREE.Vector3()),maxDim=Math.max(rawSize.x,rawSize.y,rawSize.z);if(!Number.isFinite(maxDim)||maxDim<.001)throw new Error('Некорректные размеры GLB');
-   const pivot=new THREE.Group();pivot.add(root);root.position.sub(rawBox.getCenter(new THREE.Vector3()));root.scale.multiplyScalar(22/maxDim);
-   const scaledBox=new THREE.Box3().setFromObject(pivot);const scaledSize=scaledBox.getSize(new THREE.Vector3());if(!Number.isFinite(scaledSize.length())||scaledSize.length()<.01)throw new Error('GLB имеет нулевые размеры');
-   const center=scaledBox.getCenter(new THREE.Vector3());pivot.position.sub(center);pivot.position.y+=2.5;
-   hangarScene.add(pivot);if(fallback){hangarScene.remove(fallback);fallback=null}
-   activeModel=pivot;fitTarget.set(0,2.5,0);fitRadius=Math.max(12,scaledBox.getBoundingSphere(new THREE.Sphere()).radius);
+   const pivot=new THREE.Group();pivot.add(root);
+   const center=rawBox.getCenter(new THREE.Vector3()),scale=22/maxDim;
+   pivot.scale.setScalar(scale);pivot.position.copy(center).multiplyScalar(-scale);pivot.position.y+=2.5;
+   hangarScene.add(pivot);pivot.updateMatrixWorld(true);
+   const scaledBox=new THREE.Box3().setFromObject(pivot),scaledSize=scaledBox.getSize(new THREE.Vector3());
+   if(scaledBox.isEmpty()||!Number.isFinite(scaledSize.length())||scaledSize.length()<.01)throw new Error('GLB имеет нулевые размеры');
+   const finalCenter=scaledBox.getCenter(new THREE.Vector3());fitTarget.copy(finalCenter);
+   if(fallback){hangarScene.remove(fallback);fallback=null}
+   activeModel=pivot;fitRadius=Math.max(15,scaledBox.getBoundingSphere(new THREE.Sphere()).radius);
    fitCamera();status.textContent=item.name+' · GLB загружена';
  };
  const loader=new GLTFLoader();
  loader.load(item.url,g=>{try{useLoadedModel(g)}catch(err){console.error('Hangar GLB invalid:',item.url,err);status.textContent='GLB некорректна · резервная 3D-модель'}} ,undefined,err=>{console.error('Hangar GLB load error:',item.url,err);status.textContent='GLB недоступна · показана резервная 3D-модель'});
- const render=()=>{if(!hangarRenderer||!hangarScene||!hangarCamera)return;hangarFrame=requestAnimationFrame(render);if(activeModel)activeModel.rotation.y+=.00045;hangarRenderer.render(hangarScene,hangarCamera)};render();
+ const render=()=>{if(!hangarRenderer||!hangarScene||!hangarCamera)return;hangarFrame=requestAnimationFrame(render);hangarRenderer.render(hangarScene,hangarCamera)};render();
  hangarResizeObserver=new ResizeObserver(()=>{if(host.clientWidth&&host.clientHeight)fitCamera()});hangarResizeObserver.observe(host);
 }
 function initMap(id,allowPick){if(!window.Cesium||$(id).dataset.ready)return;$(id).dataset.ready='1';const key=window.CESIUM_ION_TOKEN||'';if(key)Cesium.Ion.defaultAccessToken=key;let v=new Cesium.Viewer(id,{baseLayer:key?undefined:false,terrain:key?Cesium.Terrain.fromWorldTerrain():new Cesium.EllipsoidTerrainProvider(),animation:false,timeline:false,baseLayerPicker:true,geocoder:true,homeButton:true,sceneModePicker:true,navigationHelpButton:false,fullscreenButton:false,infoBox:false,selectionIndicator:false});if(!key)v.imageryLayers.addImageryProvider(new Cesium.OpenStreetMapImageryProvider({url:'https://tile.openstreetmap.org/'}));if(id!=='flightViewer')v.camera.flyTo({destination:Cesium.Cartesian3.fromDegrees(34.8,31.8,1800000)});if(id==='earthMap')earthViewer=v;else if(id==='onlineMap')onlineViewer=v;else flightViewerObj=v;if(allowPick){v.screenSpaceEventHandler.setInputAction(click=>{if(!pickMode)return;const c=v.camera.pickEllipsoid(click.position,v.scene.globe.ellipsoid);if(!c)return;const p=Cesium.Cartographic.fromCartesian(c);const val={lat:Cesium.Math.toDegrees(p.latitude),lon:Cesium.Math.toDegrees(p.longitude)};if(pickMode==='departure'){departure=val;$('departure').value=val.lat.toFixed(4)+','+val.lon.toFixed(4)}else{arrival=val;$('arrival').value=val.lat.toFixed(4)+','+val.lon.toFixed(4)}pickMode=null;updateStart() },Cesium.ScreenSpaceEventType.LEFT_CLICK)}}
